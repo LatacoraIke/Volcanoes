@@ -26,16 +26,36 @@
            (zipmap header-line volcano-line))
          volcano-lines)))
 
-(defn parsed-numbers [volcano]
+(defn parse-eruption-date [date]
+  (if (= "Unknown" date)
+    nil
+    (let [[_ y e] (re-matches #"(\d+) (.+)" date)]
+      (cond
+        (= e "BCE")
+        (- (Integer/parseInt y))
+        (= e "CE")
+        (Integer/parseInt y)
+        :else
+        (throw (ex-info "Could not parse year." {:year date}))))))
+
+(defn parse-numbers [volcano]
   (-> volcano
       (update :elevation-meters #(Integer/parseInt %))
       (update :longitude #(Double/parseDouble %))
       (update :latitude #(Double/parseDouble %))))
 
 (def volcanoes-parsed
-  (map parsed-numbers volcano-records))
+  (map parse-numbers volcano-records))
 
 (def types (set (map :primary-volcano-type volcano-records)))
+
+;;run-legnth encoding
+(defn run-legnth-encoding [m]
+  (map (juxt count first) (partition-by identity m)))
+
+;;drop every nth element
+(defn drop-every [n m]
+  (mapcat butlast (partition-all n m)))
 
 (comment
 
